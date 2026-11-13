@@ -1,0 +1,10 @@
+{
+	"id": "quick-expense",
+	"name": "Quick Expense",
+	"version": "1.0.0",
+	"minAppVersion": "1.8.7",
+	"description": "Log an expense in seconds: type what and how much, tap a category, done. Your location carries over, and each expense is a plain note you can sum with Bases.",
+	"author": "moboku",
+	"authorUrl": "https://github.com/moboku",
+	"isDesktopOnly": false
+}

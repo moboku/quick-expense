@@ -1,0 +1,18 @@
+.quick-expense-modal { width: 460px; }
+.quick-expense-modal .qe-top { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.quick-expense-modal .qe-loc { flex: 1; justify-content: flex-start; font-weight: 600; }
+.quick-expense-modal .qe-date { width: 140px; }
+.quick-expense-modal .qe-picker { border: 1px solid var(--background-modifier-border); border-radius: 8px; padding: 8px; margin-bottom: 10px; }
+.quick-expense-modal .qe-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.quick-expense-modal .qe-chips button { padding: 2px 10px; height: auto; }
+.quick-expense-modal .qe-chips button.is-on { background: var(--interactive-accent); color: var(--text-on-accent); }
+.quick-expense-modal .qe-newloc input { width: 100%; }
+.quick-expense-modal .qe-cur { display: block; margin-top: 6px; font-size: var(--font-ui-smaller); color: var(--text-muted); }
+.quick-expense-modal .qe-in { width: 100%; margin-bottom: 8px; font-size: 1.05em; }
+.quick-expense-modal .qe-hint { font-size: var(--font-ui-smaller); color: var(--text-faint); margin: 2px 0 6px; }
+.quick-expense-modal .qe-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.quick-expense-modal .qe-grid button { height: 40px; }
+.quick-expense-modal .qe-grid button:focus-visible { outline: 2px solid var(--interactive-accent); }
+.qe-list { max-height: 240px; overflow: auto; margin: 0 0 12px; }
+.qe-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.qe-categories { width: 100%; font-family: var(--font-monospace); }
