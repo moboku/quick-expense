@@ -16,3 +16,5 @@
 .qe-list { max-height: 240px; overflow: auto; margin: 0 0 12px; }
 .qe-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 .qe-categories { width: 100%; font-family: var(--font-monospace); }
+.qe-notice { cursor: pointer; }
+.qe-notice .qe-saved-path { margin-top: 4px; font-size: var(--font-ui-smaller); opacity: 0.8; text-decoration: underline; }

@@ -7,6 +7,7 @@ import {
 	PluginSettingTab,
 	Setting,
 	stringifyYaml,
+	TAbstractFile,
 	TFile,
 	TFolder,
 } from "obsidian";
@@ -25,8 +26,10 @@ interface Settings {
 	current: string;
 }
 
+const defaultFolder = (): string => (isZh() ? "消费" : "Expenses");
+
 const defaults = (): Settings => ({
-	folder: isZh() ? "消费" : "Expenses",
+	folder: defaultFolder(),
 	categories: isZh() ? DEFAULT_CATEGORIES_ZH : DEFAULT_CATEGORIES_EN,
 	sortByUse: true,
 	propDate: "date",
@@ -72,6 +75,7 @@ export default class QuickExpensePlugin extends Plugin {
 	async onload(): Promise<void> {
 		this.settings = Object.assign(defaults(), (await this.loadData()) as Partial<Settings> | null);
 		this.addCommand({ id: "add", name: t().commandAdd, icon: "wallet", callback: () => this.openModal() });
+		this.addCommand({ id: "summary", name: t().commandSummary, icon: "table", callback: () => void this.openSummary() });
 		this.addRibbonIcon("wallet", t().ribbon, () => this.openModal());
 		this.addSettingTab(new QuickExpenseSettingTab(this.app, this));
 	}
@@ -97,7 +101,62 @@ export default class QuickExpensePlugin extends Plugin {
 	}
 
 	folderPath(): string {
-		return normalizePath(this.settings.folder || "/");
+		return normalizePath(this.settings.folder || defaultFolder());
+	}
+
+	/** The summary .base sits next to the expense folder, e.g. "消费汇总.base". */
+	summaryPath(): string {
+		const folder = this.folderPath();
+		if (folder === "/") return t().commandSummary + ".base";
+		const i = folder.lastIndexOf("/");
+		const parent = i < 0 ? "" : folder.slice(0, i + 1);
+		const name = folder.slice(i + 1);
+		return normalizePath(`${parent}${name}${isZh() ? "汇总" : " summary"}.base`);
+	}
+
+	summaryYaml(): string {
+		const s = this.settings;
+		const folder = this.folderPath();
+		const d = `note[${JSON.stringify(s.propDate)}]`;
+		const filters = ['file.ext == "md"', '!file.name.startsWith("_")'];
+		if (folder !== "/") filters.unshift(`file.inFolder(${JSON.stringify(folder)})`);
+		const month = isZh() ? "月份" : "month";
+		return stringifyYaml({
+			filters: { and: filters },
+			formulas: { [month]: `if(${d}.isType("date"), ${d}, date(${d})).format("YYYY-MM")` },
+			views: [
+				{
+					type: "table",
+					name: t().viewByDay,
+					groupBy: { property: s.propDate, direction: "DESC" },
+					order: ["file.name", s.propCategory, s.propAmount, s.propLocation],
+					summaries: { [s.propAmount]: "Sum" },
+				},
+				{
+					type: "table",
+					name: t().viewByMonth,
+					groupBy: { property: `formula.${month}`, direction: "DESC" },
+					order: ["file.name", s.propDate, s.propCategory, s.propAmount, s.propLocation],
+					sort: [{ property: s.propDate, direction: "DESC" }],
+					summaries: { [s.propAmount]: "Sum" },
+				},
+			],
+		});
+	}
+
+	async openSummary(): Promise<void> {
+		const path = this.summaryPath();
+		const existing: TAbstractFile | null = this.app.vault.getAbstractFileByPath(path);
+		let file: TFile;
+		if (existing instanceof TFile) {
+			file = existing;
+		} else {
+			const i = path.lastIndexOf("/");
+			if (i > 0) await this.ensureFolder(path.slice(0, i));
+			file = await this.app.vault.create(path, this.summaryYaml());
+			new Notice(t().summaryCreated(path));
+		}
+		await this.app.workspace.getLeaf("tab").openFile(file);
 	}
 
 	expenseFiles(): TFile[] {
@@ -319,12 +378,20 @@ class ExpenseModal extends Modal {
 							return !(ls.length === 1 && ls[0] === this.loc);
 						})
 					: [];
-			await plugin.create({ title, amount, category, loc: this.loc, date });
+			const file = await plugin.create({ title, amount, category, loc: this.loc, date });
 			if (locChanged) {
 				s.current = this.loc;
 				await plugin.saveSettings();
 			}
-			new Notice(t().saved(`${title}  ${amount} · ${label}${this.loc ? " · " + this.loc : ""}`));
+			const msg = createFragment((f) => {
+				f.createDiv({ text: t().saved(`${title}  ${amount} · ${label}${this.loc ? " · " + this.loc : ""}`) });
+				f.createDiv({ text: t().savedTo(file.path), cls: "qe-saved-path" });
+			});
+			const notice = new Notice(msg, 8000);
+			notice.messageEl.addClass("qe-notice");
+			notice.messageEl.addEventListener("click", () => {
+				void this.app.workspace.getLeaf("tab").openFile(file);
+			});
 			this.close();
 			if (others.length) new BackfillModal(this.app, plugin, date, this.loc, others).open();
 		} catch (e) {
@@ -401,12 +468,25 @@ class QuickExpenseSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName(t().sFolder)
-			.setDesc(t().sFolderDesc)
+			.setDesc(t().sFolderDesc(defaultFolder(), this.plugin.expenseFiles().length))
 			.addText((x) =>
-				x.setValue(s.folder).onChange(async (v) => {
-					s.folder = v.trim();
-					await save();
-				}),
+				x
+					.setPlaceholder(defaultFolder())
+					.setValue(s.folder)
+					.onChange(async (v) => {
+						s.folder = v.trim();
+						await save();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(t().sSummary)
+			.setDesc(t().sSummaryDesc(this.plugin.summaryPath()))
+			.addButton((b) =>
+				b
+					.setButtonText(t().sSummaryBtn)
+					.setCta()
+					.onClick(() => void this.plugin.openSummary()),
 			);
 
 		new Setting(containerEl)

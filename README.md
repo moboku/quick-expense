@@ -18,6 +18,9 @@
 1. Run **Log an expense** from the ribbon wallet icon, the command palette or a hotkey.
 2. Type what you bought, press Enter, type the amount, press Enter.
 3. Tap a category. The note is created and the dialog closes.
+4. A notice shows where the note was saved. Click it to open the note.
+
+Settings live under **Settings → Community plugins → Quick Expense**.
 
 The new note looks like this:
 
@@ -45,7 +48,7 @@ Categories are sorted by how often you use them. In settings, write one per line
 
 | Setting | Default |
 | --- | --- |
-| Folder | `Expenses` |
+| Folder | `Expenses`, created automatically |
 | Current location | Last one you used |
 | Categories | 12 common categories |
 | Sort categories by use | On |
@@ -55,7 +58,9 @@ Categories are sorted by how often you use them. In settings, write one per line
 
 ## Sum it with Bases
 
-Create a `.base` file like this to get daily and monthly totals:
+In settings, click **Summary table → Create / open** (or run **Open expense summary**). It creates `Expenses summary.base` next to your expense folder, with a "By day" and a "By month" view that total the amount. If the file already exists it is just opened, so your edits are kept.
+
+If you'd rather write it yourself, a `.base` file like this gives daily and monthly totals:
 
 ```yaml
 filters:
@@ -106,7 +111,9 @@ MIT
 **几秒记一笔账。** 写买了什么、填金额、点一下类别就存好。地点沿用上一笔，每一笔都是带属性的普通笔记，可以直接用 Bases 或 Dataview 求和。
 
 - 从左边栏的钱包图标、命令面板或快捷键打开「记一笔」。
-- 写内容，回车；填金额，回车；点类别，存好、关窗。
+- 写内容，回车；填金额，回车；点类别，存好、关窗。右下角会提示存到了哪里，点一下就打开那篇笔记。
+- **默认文件夹**：vault 根目录下的 `消费`，没有会自动建。设置在「设置 → 第三方插件 → Quick Expense」。
+- **汇总表**：设置里点「汇总表 → 生成 / 打开」，或者命令「打开消费汇总」，会在消费文件夹旁边生成 `消费汇总.base`，有按天、按月两个视图，金额自动求和。文件已经有了就直接打开，不会覆盖你的修改。
 - **地点跟随**：自动带上上次的地点，旅行时在同一个城市连着记很省事。点 📍 可以选最近去过的地点或输入新的。不勾「设为当前地点」就只用于这一笔。
 - **改当天其他记录**：换了当前地点时，如果当天还有别的地点或没填地点的记录，会问你全部改、只改没填的，还是不改。
 - **类别**：按使用次数排序。设置里每行写一个 `值` 或 `值 | 按钮文字`，保存的是值。
