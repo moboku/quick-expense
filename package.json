@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "version": "node version-bump.mjs && git add manifest.json versions.json"
   },
-  "author": "moboku",
+  "author": "Tang Mo",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^26.6.6",
