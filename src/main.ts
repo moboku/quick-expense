@@ -6,6 +6,8 @@ import {
 	Plugin,
 	PluginSettingTab,
 	Setting,
+	SettingDefinition,
+	SettingDefinitionItem,
 	stringifyYaml,
 	TAbstractFile,
 	TFile,
@@ -25,6 +27,8 @@ interface Settings {
 	askBackfill: boolean;
 	current: string;
 }
+
+type PropKey = "propDate" | "propCategory" | "propAmount" | "propLocation";
 
 const defaultFolder = (): string => (isZh() ? "消费" : "Expenses");
 
@@ -460,6 +464,66 @@ class QuickExpenseSettingTab extends PluginSettingTab {
 		super(app, plugin);
 	}
 
+	/** Obsidian 1.13+: declarative settings, also indexed by the settings search. */
+	getSettingDefinitions(): SettingDefinitionItem[] {
+		const p = this.plugin;
+		const prop = (name: string, key: PropKey): SettingDefinition => ({
+			name,
+			control: { type: "text", key, validate: (v: string) => (v.trim() ? undefined : t().sPropEmpty) },
+		});
+		return [
+			{
+				name: t().sFolder,
+				desc: t().sFolderDesc(defaultFolder(), p.expenseFiles().length),
+				control: { type: "folder", key: "folder", placeholder: defaultFolder() },
+			},
+			{
+				name: t().sSummary,
+				desc: t().sSummaryDesc(p.summaryPath()),
+				render: (setting) => {
+					setting.addButton((b) =>
+						b
+							.setButtonText(t().sSummaryBtn)
+							.setCta()
+							.onClick(() => void p.openSummary()),
+					);
+				},
+			},
+			{ name: t().sCurrent, desc: t().sCurrentDesc, control: { type: "text", key: "current" } },
+			{
+				name: t().sCategories,
+				desc: t().sCategoriesDesc,
+				control: { type: "textarea", key: "categories", rows: 12 },
+			},
+			{ name: t().sSortByUse, desc: t().sSortByUseDesc, control: { type: "toggle", key: "sortByUse" } },
+			{ name: t().sAskBackfill, desc: t().sAskBackfillDesc, control: { type: "toggle", key: "askBackfill" } },
+			{
+				type: "group",
+				heading: t().sProps,
+				items: [
+					prop(t().sPropDate, "propDate"),
+					prop(t().sPropCategory, "propCategory"),
+					prop(t().sPropAmount, "propAmount"),
+					prop(t().sPropLocation, "propLocation"),
+					{ name: t().sLocationList, desc: t().sLocationListDesc, control: { type: "toggle", key: "locationAsList" } },
+				],
+			},
+		];
+	}
+
+	getControlValue(key: string): unknown {
+		return this.plugin.settings[key as keyof Settings];
+	}
+
+	async setControlValue(key: string, value: unknown): Promise<void> {
+		const s = this.plugin.settings as unknown as Record<string, unknown>;
+		if (typeof value === "string" && key !== "categories") value = value.trim();
+		if (key.startsWith("prop") && !value) return;
+		s[key] = value;
+		await this.plugin.saveSettings();
+	}
+
+	/** Fallback for Obsidian before 1.13. */
 	display(): void {
 		const { containerEl } = this;
 		const s = this.plugin.settings;
@@ -532,7 +596,7 @@ class QuickExpenseSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl).setName(t().sProps).setDesc(t().sPropsDesc).setHeading();
-		const prop = (name: string, key: "propDate" | "propCategory" | "propAmount" | "propLocation") =>
+		const prop = (name: string, key: PropKey) =>
 			new Setting(containerEl).setName(name).addText((x) =>
 				x.setValue(s[key]).onChange(async (v) => {
 					if (v.trim()) s[key] = v.trim();
