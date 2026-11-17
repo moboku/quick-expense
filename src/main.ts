@@ -229,8 +229,10 @@ export default class QuickExpensePlugin extends Plugin {
 			[s.propAmount]: e.amount,
 			[s.propLocation]: this.locationValue(e.loc),
 		};
-		// Write the frontmatter in one go so folder-template plugins don't see an empty note.
-		return this.app.vault.create(path, `---\n${stringifyYaml(fm)}---\n`);
+		// Write the frontmatter in one go, plus a non-empty body: Templater applies folder templates
+		// to notes whose body (after frontmatter) is empty, and merges the template's frontmatter in,
+		// overwriting the chosen date and appending null to the location list.
+		return this.app.vault.create(path, `---\n${stringifyYaml(fm)}---\n\n`);
 	}
 
 	async setLocation(files: TFile[], loc: string): Promise<void> {
