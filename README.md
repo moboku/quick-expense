@@ -4,14 +4,7 @@
 
 [中文说明](#中文说明)
 
-```
-┌──────────── Log an expense ─────────────┐
-│ 📍 Tokyo ▾                 2026-11-13 ▾ │
-│ [ Ramen                              ]  │
-│ [ 1200                               ]  │
-│ [🍜 Food] [☕ Coffee] [🚃 Transport] …   │  ← tap = saved
-└─────────────────────────────────────────┘
-```
+![Log an expense: click the wallet icon, type what and how much, tap a category](docs/demo.gif)
 
 ## How it works
 
